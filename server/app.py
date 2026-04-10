@@ -2,7 +2,14 @@
 app.py — FastAPI entry point for Email Triage OpenEnv.
 Fully self-contained: all environment logic inlined to avoid import failures.
 """
+# Add these lines at the very top of server/app.py
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+# Now your existing imports will work
+from env import EmailTriageEnv, EmailAction
+from tasks import TASKS
 from __future__ import annotations
 import random
 from dataclasses import dataclass

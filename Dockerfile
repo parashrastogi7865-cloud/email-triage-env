@@ -14,4 +14,5 @@ RUN python -c "import app; print('app.py import OK')"
 
 EXPOSE 7860
 
-CMD ["python", "-m", "uvicorn", "app:app", "--host", "0.0.0.0", "--port", "7860"]
+# Change the last line of your Dockerfile to this:
+CMD ["python", "-m", "uvicorn", "server.app:app", "--host", "0.0.0.0", "--port", "7860"]
