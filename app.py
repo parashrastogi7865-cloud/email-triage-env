@@ -1,14 +1,14 @@
 """
-FastAPI wrapper for Email Triage OpenEnv.
-POST /reset  — reset environment (body optional, defaults: task_id=0, seed=42)
-POST /step   — take action
-GET  /state  — current internal state
-GET  /health — health check
+server/app.py — Required entry point for OpenEnv multi-mode deployment.
+Mirrors the root app.py but lives at server/app.py per OpenEnv spec.
 """
+
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel
 from typing import Optional
 import uvicorn
 
@@ -20,28 +20,11 @@ app = FastAPI(title="Email Triage OpenEnv", version="1.0.0")
 _envs: dict = {}
 
 
-class ResetRequest(BaseModel):
-    task_id: int = 0
-    seed: int = 42
-    session_id: str = "default"
-
-
-class StepRequest(BaseModel):
-    email_id: str
-    label: str
-    priority: int
-    reply: Optional[str] = None
-    archive: bool = False
-    session_id: str = "default"
-
-
 @app.post("/reset")
 async def reset(request: Request):
-    """Reset environment. Body is optional — defaults to task_id=0, seed=42."""
     task_id = 0
     seed = 42
     session_id = "default"
-
     try:
         body = await request.json()
         if body and isinstance(body, dict):
@@ -49,8 +32,7 @@ async def reset(request: Request):
             seed = int(body.get("seed", 42))
             session_id = str(body.get("session_id", "default"))
     except Exception:
-        pass  # empty or invalid body — use defaults
-
+        pass
     env = EmailTriageEnv(task_id=task_id, seed=seed)
     obs = env.reset()
     _envs[session_id] = env
@@ -59,19 +41,16 @@ async def reset(request: Request):
 
 @app.post("/step")
 async def step(request: Request):
-    """Take one step. Requires email_id, label, priority in body."""
     try:
         body = await request.json()
     except Exception:
         return JSONResponse({"error": "Invalid JSON body"}, status_code=400)
-
     session_id = body.get("session_id", "default")
     env = _envs.get(session_id)
     if env is None:
         return JSONResponse({"error": "Call /reset first"}, status_code=400)
     if env._done:
         return JSONResponse({"error": "Episode done. Call /reset."}, status_code=400)
-
     try:
         action = EmailAction(
             email_id=body["email_id"],
@@ -82,14 +61,8 @@ async def step(request: Request):
         )
     except Exception as e:
         return JSONResponse({"error": f"Invalid action: {e}"}, status_code=400)
-
     obs, reward, done, info = env.step(action)
-    return JSONResponse({
-        "observation": obs.model_dump(),
-        "reward": reward,
-        "done": done,
-        "info": info,
-    })
+    return JSONResponse({"observation": obs.model_dump(), "reward": reward, "done": done, "info": info})
 
 
 @app.get("/state")
