@@ -1,10 +1,6 @@
 """
-server/app.py — OpenEnv multi-mode deployment entry point.
+app.py — FastAPI entry point for Email Triage OpenEnv.
 """
-
-import sys
-import os
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
@@ -58,7 +54,8 @@ async def step(request: Request):
     except Exception as e:
         return JSONResponse({"error": f"Invalid action: {e}"}, status_code=400)
     obs, reward, done, info = env.step(action)
-    return JSONResponse({"observation": obs.model_dump(), "reward": reward, "done": done, "info": info})
+    return JSONResponse({"observation": obs.model_dump(), "reward": reward,
+                         "done": done, "info": info})
 
 
 @app.get("/state")
@@ -82,11 +79,11 @@ def health():
 
 @app.get("/")
 def root():
-    return {"env": "email-triage-v1", "version": "1.0.0"}
+    return {"env": "email-triage-v1", "version": "1.0.0",
+            "endpoints": ["/reset", "/step", "/state", "/tasks", "/health"]}
 
 
 def main():
-    """Entry point for OpenEnv multi-mode deployment."""
     uvicorn.run(app, host="0.0.0.0", port=7860)
 
 
