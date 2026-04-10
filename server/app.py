@@ -1,6 +1,5 @@
 """
-server/app.py — Required entry point for OpenEnv multi-mode deployment.
-Mirrors the root app.py but lives at server/app.py per OpenEnv spec.
+server/app.py — OpenEnv multi-mode deployment entry point.
 """
 
 import sys
@@ -9,7 +8,6 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
-from typing import Optional
 import uvicorn
 
 from env import EmailTriageEnv, EmailAction
@@ -22,9 +20,7 @@ _envs: dict = {}
 
 @app.post("/reset")
 async def reset(request: Request):
-    task_id = 0
-    seed = 42
-    session_id = "default"
+    task_id, seed, session_id = 0, 42, "default"
     try:
         body = await request.json()
         if body and isinstance(body, dict):
@@ -86,9 +82,13 @@ def health():
 
 @app.get("/")
 def root():
-    return {"env": "email-triage-v1", "version": "1.0.0",
-            "endpoints": ["/reset", "/step", "/state", "/tasks", "/health"]}
+    return {"env": "email-triage-v1", "version": "1.0.0"}
+
+
+def main():
+    """Entry point for OpenEnv multi-mode deployment."""
+    uvicorn.run(app, host="0.0.0.0", port=7860)
 
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=7860)
+    main()
