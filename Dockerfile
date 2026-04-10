@@ -2,17 +2,19 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Copy everything first
+# Copy all files into the container
 COPY . .
 
-# Install dependencies - openenv-core may not be on PyPI, ignore if missing
-RUN pip install --no-cache-dir fastapi uvicorn pydantic openai pyyaml || true
-RUN pip install --no-cache-dir openenv-core || true
+# Install necessary libraries
+RUN pip install --no-cache-dir fastapi uvicorn pydantic openai pyyaml openenv-core
 
-# Verify app.py is present and importable
-RUN python -c "import app; print('app.py import OK')"
+# Set the PYTHONPATH so the server folder is recognized as a package
+ENV PYTHONPATH=/app
+
+# Updated verification command to look inside the server folder
+RUN python -c "from server import app; print('app.py import OK')"
 
 EXPOSE 7860
 
-# Change the last line of your Dockerfile to this:
+# Start the server using the module path
 CMD ["python", "-m", "uvicorn", "server.app:app", "--host", "0.0.0.0", "--port", "7860"]
