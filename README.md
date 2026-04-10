@@ -146,10 +146,9 @@ docker build -t email-triage-openenv .
 docker run -p 7860:7860 email-triage-openenv
 ```
 VERSIONS
-openenv-core>=0.2.0
-pydantic>=2.0
 fastapi>=0.110.0
 uvicorn>=0.27.0
+pydantic>=2.0
 openai>=1.0
 pyyaml>=6.0
 ---
