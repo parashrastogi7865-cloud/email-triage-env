@@ -29,3 +29,4 @@ name = "email-triage-v1"
 version = "1.0.0"
 entry_point = "env:EmailTriageEnv"
 tasks = [0, 1, 2]
+
